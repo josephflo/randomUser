@@ -1,50 +1,55 @@
 import { useEffect, useState } from "react";
+import UserProfile from "./components/UserProfile";
 import "./App.css";
 import axios from "axios";
 
 function App() {
-  const [user, setUser] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const fetchRandomUser = async () => {
-    setIsLoading(true);
     try {
       const response = await axios.get("https://randomuser.me/api");
       const apiUser = response.data.results[0];
-      setUser(apiUser);
-      console.log(apiUser);
+      setUsers([...users, apiUser]);
+      console.log(users);
+      console.log(currentIndex);
     } catch (error) {
       console.error(error.message);
-    } finally {
-      setIsLoading(false);
     }
   };
-  
   useEffect(() => {
     fetchRandomUser();
+    console.log(users);
   }, []);
 
+  const handleNextClick = () => {
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % users.length);
+  };
+
+  const handlePreviousClick = () => {
+    setCurrentIndex(
+      (prevIndex) => (prevIndex - 1 + users.length) % users.length
+    );
+  };
+
   return (
-    <>
-      <div>
-        {isLoading ? (
-          <p>Loading ...</p>
-        ) : (
+    <div>
+      {users.length > 0 && (
+        <div>
           <div>
-            <img
-              className="w-20 h-20 rounded-full"
-              src={user.picture?.large}
-              alt="user"
-            />
-            <h2>
-              {user.name?.first} {user.name?.last}{" "}
-            </h2>
-            <p>{user?.gender}</p>
+            <UserProfile user={users[currentIndex]} />
           </div>
-        )}
-        <button onClick={fetchRandomUser}>next user</button>
-      </div>
-    </>
+          <div>
+            <button onClick={handlePreviousClick}>prev user</button>
+            <button onClick={()=>{
+              fetchRandomUser();
+              handleNextClick();
+            }}>next user</button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
